@@ -1,0 +1,85 @@
+@charset "UTF-8";
+
+/*共通部分
+-------------------------------------*/
+html {
+    font-size: 100%;
+}
+body {
+    font-family: 'M PLUS 1p', sans-serif;
+    background-color:#fdfafa;
+    color:#7a7b82;
+}
+header {
+    background-color: #49d3e9;
+    padding: 20px 0;
+    margin-bottom: 50px;
+}
+a {
+    text-decoration: none;
+    color: #49d3e9;
+}
+.title{
+    font-family: 'Aclonica', sans-serif;
+    letter-spacing: 0.5rem;
+    text-indent: 0.5rem;
+    text-align: center;
+}
+.title a{
+    color: #ffffff;
+}
+.wrapper {
+    width: 1200px;
+    margin: 0 auto;
+}
+
+/* HOME
+------------------*/
+.bt-list {
+    width: 100%;
+    border-collapse: separate;
+    border: none;
+    border-spacing: 0px;
+}
+.bt-list tr {
+    height: 40px;
+}
+.bt-list tbody td {
+    text-align: center;
+}
+
+/*上部ヘッダー*/
+.bt-list thead th {
+    color: #ffffff;
+    font-weight: bold;
+    background-color: #49d3e9;
+}
+
+/*上部のヘッダーの丸み*/
+.bt-list thead th:first-child {
+    border-radius: 10px 0 0 0;
+}
+.bt-list thead th:last-child {
+    border-radius: 0 10px 0 0;
+}
+
+/*1行ずつ色変更*/
+.bt-list tr:nth-child(odd) td {
+    background-color: #fdfdfd;
+}
+.bt-list tr:nth-child(even) td {
+    background-color: #f5f5f5;
+}
+
+.fa-plus-circle {
+    color: #49d3e9;
+    font-size: 40px;
+    position: fixed;
+    right: 20ox;
+    bottom: 20px;
+}
+
+.fa-plus-circle:hover {
+    color: #4cdecf;
+    cursor: pointer;
+}
