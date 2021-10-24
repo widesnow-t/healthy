@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/functions.php';
 
-//データベースに接続
 $dbh = connectDb();
 ?>
 <!DOCTYPE html>
