@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . '/functions.php';
 
-date_default_timezone_set('Asia/Tokyo');
-
 //パラメータの取得
 $ym = filter_input(INPUT_GET, 'ym');
 
@@ -14,41 +12,74 @@ if (empty($ym)) {
 }
 
 //先月と翌月を算出
-$last_month = date('Ym', strtotime('first day of previous month' . substr_replace($ym, '-', 4, 0)));
 //$last_month = date('Ym', strtotime('first day of previous month' . substr_replace($ym, '-', 4, 0)));
-$next_month = date('Ym', strtotime('first day of next month' . substr_replace($ym, '-', 4, 0)));
+//$last_month = date('Ym', strtotime('first day of previous month' . substr_replace($ym, '-', 4, 0)));
+//$next_month = date('Ym', strtotime('first day of next month' . substr_replace($ym, '-', 4, 0)));
 //$next_month = date('Ym', strtotime('first day of next month' . substr_replace($ym, '-', 4, 0)));
 
 //表示する年月日算出(YYYY年mm月)
-$disp_ym = date('Y年m月', strtotime($ym . '01'));
+//$disp_ym = date('Y年m月', strtotime($ym . '01'));
+//検温データに関連する年月の算出
+[$last_month, $next_month, $disp_ym] = calcBtRelatedYm($ym);
 
 //データベースに接続
-$dbh = connectDb();
+//$dbh = connectDb();
 
 //SQLの作成
-$sql = <<<EOM
-SELECT
-    *
-FROM
-    body_temperatures
-WHERE
-    date_format(measurement_date, '%Y%m') = :ym
-ORDER BY
-    measurement_date
-EOM;
+//$sql = <<<EOM
+//SELECT
+//    *
+//FROM
+//    body_temperatures
+//WHERE
+//    date_format(measurement_date, '%Y%m') = :ym
+//ORDER BY
+//    measurement_date
+//EOM;
 
 //準備
-$stmt = $dbh->prepare($sql);
+//$stmt = $dbh->prepare($sql);
 
 //パラメータのバインドの結びつけ
-$stmt->bindParam(':ym', $ym, PDO::PARAM_STR);
+//$stmt->bindParam(':ym', $ym, PDO::PARAM_STR);
 
 //実行
-$stmt->execute();
+//$stmt->execute();
 
 //取得したデータを変数に代入
-$bts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+//$bts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 //var_dump($bts);
+//該当年月を使用して検温データ抽出
+$bts = findBtbyYm($ym);
+
+//Highcharts(Javascript)に渡す値の作成
+//$array_days: 検温日の日の部分を配列で生成(｢'1日', '2日',････｢)
+//array_bts: 体温を配列で生成([36.3, 36.8, ･･･])
+//$array_days = [];
+//$array_bts = [];
+
+//foreach ($bts as $bt) {
+    //検温日の日の部分(8桁のうち後ろ2桁)を抽出｡ltirmで0を削除する(例 08->8)
+    //$array_days[] = ltrim(substr($bt['measurement_date'], -2), '0') . '日';
+    //$array_days[] = ltrim(substr($bt['measurement_date'], -2), '0') . '日';
+//グラフに表示するデータの設定
+//[変更]グラフに表示するデータとクリックしたときに表示するURLの設定
+    //$array_bts[] = [
+        //体温を文字列からfloat型に変換
+        //fetchALL8PDO::FETCH_ASSOC)でデ-タを取得すると､'36､8'のように文字列になってしまうので変換する
+        //(float)$bt['body_temperature']
+        //'y' => (float)$bt['body_temperature'],
+        //'url' => 'show.php?id=' . $bt['id']
+    //];
+//}
+                            //Highchartsに渡すデータはJSON形式でなければいけないので､連想配列をJSONに変換
+                            // https://www.php.net/manual/ja/function.json-encode.php
+                            //$json_days = json_encode($array_days);
+                            //$json_bts = json_encode($array_bts);
+                            //$json_days = json_encode($array_days);
+                            //$json_bts = json_encode($array_bts);
+                            //Highcharts(JavaScript)に渡す値の作成
+                            [$json_days, $json_bts] = formatBtToJson($bts);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -78,41 +109,63 @@ $bts = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <span class="show-ym"><?= h($disp_ym) ?></span>
             <a href="index.php?ym=<?= h($next_month) ?>"><i class="fas fa-angle-right"></i></a>
         </section>
-        <table class="bt-list">
-            <thead>
-                <tr>
-                    <th>検温日</th>
-                    <th>体温</th>
-                    <th>メモ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!--<tr>
-                        <td><a href="">YYYY-MM-01</a></td>
-                        <td>XX.1 ℃</td>
-                        <td>テストメモ1</td>
-                    </tr>
-                    <tr>
-                        <td><a href="">YYYY-MM-02</a></td>
-                        <td>XX.2 ℃</td>
-                        <td>テストメモ2</td>
-                    </tr>
-                    <tr>
-                        <td><a href="">YYYY-MM-03</a></td>
-                        <td>XX.3 ℃</td>
-                        <td>テストメモ3</td>
-                    </tr>-->
-                <?php foreach ($bts as $bt) : ?>
-                    <tr>
-                        <td><a href="show.php?id=<?= h($bt['id']) ?>"><?= h($bt['measurement_date']) ?></a></td>
-                        <td><?= h($bt['body_temperature']) ?> ℃</td>
-                        <td><?= h($bt['memo']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <div id="container"></div>
         <a href="new.php"><i class="fas fa-plus-circle"></i></a>
     </div>
+    <!--以下がHighcharts用のコード-->
+    <script language="JavaScript">
+        document.addEventListener('DOMContentLoaded', function(){
+            const chart = Highcharts.chart('container', {
+                //chart: {
+                    //type: 'bar'
+                //},
+                title: {
+                    //text: 'Fruit Consumption'
+                    text: ''
+                },
+                xAxis: {
+                    //categories: ['Apples', 'Bananas', 'Oranges']
+                    //categories: ['1日', '3日', '5日']
+                    categories: <?= $json_days ?>
+                },
+                yAxis: {
+                    title: {
+                        //text: 'Fruit eaten'
+                        text: '体温(℃)'
+                    }
+                },
+                tooltip: {
+                    valueSuffix: '℃'
+                },
+                plotOptions: {
+                    series: {
+                        cursor: 'pointer',
+                        point: {
+                            events: {
+                                click: function() {
+                                    location.href = this.options.url;
+                                }
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    //name: 'Jane',
+                    //data: [1, 0, 4]
+                //}, {
+                    //name: 'John',
+                    //data: [5, 7, 3]
+                    name: '体温',
+                    //data: [36.7, 36.2, 36.5]
+                    data: <?= $json_bts ?>,
+                    color: '#49d3e9'
+                }],
+                credits: {
+                    enabled: false
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

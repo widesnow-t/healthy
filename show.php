@@ -4,23 +4,25 @@ require_once __DIR__ . '/functions.php';
 $id = filter_input(INPUT_GET, 'id');
 
 //データベースに接続
-$dbh = connectDb();
+//$dbh = connectDb();
 
-$sql = <<<EOM
-SELECT
-    *
-FROM
-    body_temperatures
-WHERE
-    id = :id
-EOM;
-
-$stmt = $dbh->prepare($sql);
-$stmt->bindParam(':id', $id, PDO::PARAM_INT);
-$stmt->execute();
-
-$bt = $stmt->fetch(PDO::FETCH_ASSOC);
+//$sql = <<<EOM
+//SELECT
+  //  *
+//FROM
+    //body_temperatures
+//WHERE
+    //id = :id
+//EOM;
+//
+//$stmt = $dbh->prepare($sql);
+//$stmt->bindParam(':id', $id, PDO::PARAM_INT);
+//$stmt->execute();
+//
+//$bt = $stmt->fetch(PDO::FETCH_ASSOC);
 //var_dump($bt);
+//検温データの取得
+$bt = findBtById($id);
 ?>
 <!DOCTYPE html>
 <html lang="ja">

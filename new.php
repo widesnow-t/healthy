@@ -7,7 +7,8 @@ $body_temperature = '';
 $memo = '';
 //エラーチェック用の配列
 $errors = [];
-
+$errors_required = [];
+$errors_same = [];
 //フォームに入力されたデータの受取
 //$measurement_date = filter_input(INPUT_POST, 'measurement_date');
 //$body_temperature = filter_input(INPUT_POST, 'body-temperature');
@@ -18,61 +19,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $measurement_date = filter_input(INPUT_POST, 'measurement_date');
     $body_temperature = filter_input(INPUT_POST, 'body_temperature');
     $memo = filter_input(INPUT_POST, 'memo');
+
     //バリデーション
-    if ($measurement_date == '') {
-        $errors[] = '検温日が入力されてません';
-    }
-    if ($body_temperature == '') {
-        $errors[] = '体温が入力されてません';
-    }
+    //if ($measurement_date == '') {
+        //$errors[] = '検温日が入力されてません';
+    //}
+    //if ($body_temperature == '') {
+        //$errors[] = '体温が入力されてません';
+    //}
+    $errors_required = validateRequired($measurement_date, $body_temperature);
 
     //検温日に入力がある場合は､同じ検温日のデータが存在しないかチェック
     if ($measurement_date) {
         //データベースに接続
-        $dbh = connectDb();
+       // $dbh = connectDb();
 
-        $sql = <<<EOM
-        SELECT
-            *
-        FROM
-            body_temperatures
-        WHERE
-            measurement_date = :measurement_date
-        EOM;
-        $stmt = $dbh->prepare($sql);
-        $stmt->bindParam(':measurement_date', $measurement_date, PDO::PARAM_STR);
-        $stmt->execute();
-        $bt = $stmt->fetch(PDO::FETCH_ASSOC);
+        //$sql = <<<EOM
+        //SELECT
+            //*
+        //FROM
+            //body_temperatures
+        //WHERE
+            //measurement_date = :measurement_date
+        //EOM;
+        //$stmt = $dbh->prepare($sql);
+        //$stmt->bindParam(':measurement_date', $measurement_date, PDO::PARAM_STR);
+        //$stmt->execute();
+        //$bt = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($bt) {
-            $errors[] = '入力された検温日のデータは既に存在します';
-        }
-    }
-    if (empty($errors)) {
-        $sql = <<<EOM
-        INSERT INTO
-            body_temperatures
-        (
-            measurement_date,
-            body_temperature,
-            memo
-        )
-        VALUES
-        (
-            :measurement_date,
-            :body_temperature,
-            :memo
-        )
-        EOM;
-        $stmt = $dbh->prepare($sql);
-        $stmt->bindParam(':measurement_date', $measurement_date, PDO::PARAM_STR);
-        $stmt->bindParam(':body_temperature', $body_temperature, PDO::PARAM_STR);
-        $stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
-        $stmt->execute();
+        //if ($bt) {
+            //$errors[] = '入力された検温日のデータは既に存在します';
+        //}
+        $errors_same = validateSameMeasDate($measurement_date);
+    }    
+    //エラーメッセージの配列をマージ
+    $errors = array_merge($errors_required, $errors_same);
+
+if (empty($errors)) {
+        //$sql = <<<EOM
+        //INSERT INTO
+            //body_temperatures
+        //(
+            //measurement_date,
+            //body_temperature,
+            //memo
+        //)
+        //VALUES
+        //(
+            //:measurement_date,
+            //:body_temperature,
+            //:memo
+        //)
+        //EOM;
+        //$stmt = $dbh->prepare($sql);
+        //$stmt->bindParam(':measurement_date', $measurement_date, PDO::PARAM_STR);
+        //$stmt->bindParam(':body_temperature', $body_temperature, PDO::PARAM_STR);
+        //$stmt->bindParam(':memo', $memo, PDO::PARAM_STR);
+        //$stmt->execute();
+        insertBt($measurement_date, $body_temperature, $memo);
 
         header('Location: index.php');
         exit;
-        }
+    }
 }
 ?>
 
